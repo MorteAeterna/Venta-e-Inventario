@@ -1,0 +1,114 @@
+{% extends 'productos/base.html' %}
+{% load humanize %}
+
+{% block contenido %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Inventario</h2>
+    <div>
+        <button type="button" class="btn btn-primary me-2" onclick="abrirEscaner()">
+            Escanear con celular
+        </button>
+        <a href="{% url 'agregar_producto' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Agregar producto
+        </a>
+    </div>
+</div>
+
+<!-- Modal con QR -->
+<div class="modal fade" id="modalQR" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-header">
+                <h5 class="modal-title">Escanea para abrir en tu celular</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <img src="{% url 'generar_qr' %}" class="img-fluid" style="max-width: 250px;">
+                <p class="text-muted mt-3 small">Escanea este QR con la cámara de tu celular para abrir el escáner de productos.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<form method="GET" class="row g-2 mb-4">
+    <div class="col-md-6">
+        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Buscar por nombre...">
+    </div>
+    <div class="col-md-4">
+        <select name="categoria" class="form-select">
+            <option value="">Todas las categorías</option>
+            {% for cat in categorias %}
+            <option value="{{ cat.id }}" {% if categoria_id == cat.id|stringformat:"s" %}selected{% endif %}>
+                {{ cat.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+<!-- Tabla -->
+<div class="table-responsive">
+    <table class="table table-hover bg-white rounded shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombre</th>
+                <th>Marca</th>
+                <th>Categoría</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Código</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr {% if producto.stock_bajo %}class="table-danger"{% endif %}>
+                <td>{{ producto.nombre }}</td>
+                <td>{{ producto.marca|default:"-" }}</td>
+                <td>{{ producto.categoria }}</td>
+                <td>
+                    {{ producto.cantidad }}
+                    {% if producto.stock_bajo %}
+                    <span class="badge bg-danger ms-1">Stock bajo</span>
+                    {% endif %}
+                </td>
+                <td>${{ producto.precio|intcomma }}</td>
+                <td>{{ producto.codigo|default:"-" }}</td>
+                <td>
+                    <a href="{% url 'agregar_stock' producto.pk %}" class="btn btn-info btn-sm">
+                        <i class="bi bi-plus-circle"></i>
+                    </a>
+                    <a href="{% url 'editar_producto' producto.pk %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'eliminar_producto' producto.pk %}" class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center text-muted">No hay productos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function abrirEscaner() {
+    const esCelular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (esCelular) {
+        window.location.href = "{% url 'escanear' %}";
+    } else {
+        const modal = new bootstrap.Modal(document.getElementById('modalQR'));
+        modal.show();
+    }
+}
+</script>
+
+{% endblock %}

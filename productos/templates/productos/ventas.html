@@ -1,0 +1,132 @@
+{% extends 'productos/base.html' %}
+{% load humanize %}
+
+{% block contenido %}
+<div class="row">
+
+    <!-- Columna izquierda: agregar productos -->
+    <div class="col-md-5">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">Agregar producto</h5>
+            </div>
+            <div class="card-body">
+                {% if request.session.error %}
+                <div class="alert alert-danger">{{ request.session.error }}</div>
+                {% endif %}
+                <form method="POST" action="{% url 'agregar_item_carrito' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Producto</label>
+                        <select name="producto_id" class="form-select" id="producto-select" onchange="actualizarPrecio()">
+                            <option value="">Selecciona un producto</option>
+                            {% for producto in productos %}
+                            <option value="{{ producto.id }}"
+                                    data-precio="{{ producto.precio }}"
+                                    data-stock="{{ producto.cantidad }}">
+                                {{ producto.nombre }} {% if producto.marca %}- {{ producto.marca }}{% endif %}
+                                (Stock: {{ producto.cantidad }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Precio unitario</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" id="precio-display" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Cantidad</label>
+                        <input type="number" name="cantidad" class="form-control" value="1" min="1" id="cantidad-input" oninput="actualizarSubtotal()">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Subtotal</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="text" id="subtotal-display" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-plus-circle"></i> Agregar al carrito
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna derecha: carrito -->
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Carrito</h5>
+                <a href="{% url 'historial_ventas' %}" class="btn btn-outline-light btn-sm">
+                    Ver historial
+                </a>
+            </div>
+            <div class="card-body">
+                {% if productos_carrito %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cant.</th>
+                                <th>Precio</th>
+                                <th>Subtotal</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in productos_carrito %}
+                            <tr>
+                                <td>{{ item.nombre }} {% if item.marca %}<small class="text-muted">{{ item.marca }}</small>{% endif %}</td>
+                                <td>{{ item.cantidad }}</td>
+                                <td>${{ item.precio|intcomma }}</td>
+                                <td>${{ item.subtotal|intcomma }}</td>
+                                <td>
+                                    <a href="{% url 'eliminar_item_carrito' item.id %}" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <h4 class="mb-0">Total: <span class="text-success">${{ total|intcomma }}</span></h4>
+                    <form method="POST" action="{% url 'confirmar_venta' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-lg">
+                            Confirmar venta
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">No hay productos en el carrito.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function actualizarPrecio() {
+    const select = document.getElementById('producto-select');
+    const option = select.options[select.selectedIndex];
+    const precio = option.dataset.precio || 0;
+    document.getElementById('precio-display').value = parseInt(precio).toLocaleString('es-CL');
+    actualizarSubtotal();
+}
+
+function actualizarSubtotal() {
+    const select = document.getElementById('producto-select');
+    const option = select.options[select.selectedIndex];
+    const precio = parseInt(option.dataset.precio) || 0;
+    const cantidad = parseInt(document.getElementById('cantidad-input').value) || 0;
+    document.getElementById('subtotal-display').value = (precio * cantidad).toLocaleString('es-CL');
+}
+</script>
+{% endblock %}
