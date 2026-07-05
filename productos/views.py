@@ -281,3 +281,18 @@ def historial_ventas(request):
 def detalle_venta(request, pk):
     venta = get_object_or_404(Venta, pk=pk)
     return render(request, 'productos/detalle_venta.html', {'venta': venta})
+
+@csrf_exempt
+@login_required
+def crear_categoria_ajax(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        nombre = data.get('nombre', '').strip()
+        if nombre:
+            categoria = Categoria.objects.create(nombre=nombre)
+            return HttpResponse(json.dumps({
+                'success': True,
+                'id': categoria.id,
+                'nombre': categoria.nombre
+            }), content_type='application/json')
+    return HttpResponse(json.dumps({'success': False}), content_type='application/json')

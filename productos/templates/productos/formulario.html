@@ -12,7 +12,15 @@
                     {% csrf_token %}
                     {% for field in form %}
                     <div class="mb-3">
-                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <label class="form-label fw-bold">{{ field.label }}</label>
+                            {% if field.name == 'categoria' %}
+                            <button type="button" class="btn btn-outline-secondary btn-sm mb-1"
+                                    data-bs-toggle="modal" data-bs-target="#modalCategoria">
+                                + Nueva categoría
+                            </button>
+                            {% endif %}
+                        </div>
                         {{ field }}
                         {% if field.errors %}
                         <div class="text-danger small">{{ field.errors }}</div>
@@ -32,4 +40,72 @@
         </div>
     </div>
 </div>
+
+<!-- Modal nueva categoría -->
+<div class="modal fade" id="modalCategoria" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Nueva categoría</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nombre de la categoría</label>
+                    <input type="text" id="nueva-categoria-nombre" class="form-control" placeholder="Ej: Bebidas">
+                </div>
+                <div id="categoria-mensaje"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="crearCategoria()">
+                    <i class="bi bi-check-circle"></i> Crear
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function crearCategoria() {
+    const nombre = document.getElementById('nueva-categoria-nombre').value.trim();
+    if (!nombre) {
+        document.getElementById('categoria-mensaje').innerHTML =
+            '<div class="alert alert-danger">Por favor escribe un nombre.</div>';
+        return;
+    }
+
+    fetch("{% url 'crear_categoria_ajax' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({nombre: nombre})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Agregar la nueva categoría al select y seleccionarla
+            const select = document.querySelector('select[name="categoria"]');
+            const option = new Option(data.nombre, data.id, true, true);
+            select.appendChild(option);
+            select.value = data.id;
+
+            document.getElementById('categoria-mensaje').innerHTML =
+                '<div class="alert alert-success">Categoría creada correctamente.</div>';
+
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalCategoria'));
+                modal.hide();
+                document.getElementById('nueva-categoria-nombre').value = '';
+                document.getElementById('categoria-mensaje').innerHTML = '';
+            }, 1000);
+        } else {
+            document.getElementById('categoria-mensaje').innerHTML =
+                '<div class="alert alert-danger">Error al crear la categoría.</div>';
+        }
+    });
+}
+</script>
 {% endblock %}

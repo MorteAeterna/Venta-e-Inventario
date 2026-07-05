@@ -21,4 +21,5 @@ urlpatterns = [
     path('ventas/confirmar/', views.confirmar_venta, name='confirmar_venta'),
     path('ventas/historial/', views.historial_ventas, name='historial_ventas'),
     path('ventas/detalle/<int:pk>/', views.detalle_venta, name='detalle_venta'),
+    path('categorias/crear-ajax/', views.crear_categoria_ajax, name='crear_categoria_ajax'),
 ]

@@ -93,7 +93,7 @@ else:
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'inventario',
             'USER': 'postgres',
-            'PASSWORD': 'postgres123',
+            'PASSWORD': '1234',
             'HOST': 'localhost',
             'PORT': '5432',
         }
@@ -124,7 +124,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Santiago'
 
 USE_I18N = True
 

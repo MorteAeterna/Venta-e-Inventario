@@ -1,6 +1,10 @@
 {% extends 'productos/base.html' %}
 {% load humanize %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+{% endblock %}
+
 {% block contenido %}
 <div class="row">
 
@@ -18,14 +22,14 @@
                     {% csrf_token %}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Producto</label>
-                        <select name="producto_id" class="form-select" id="producto-select" onchange="actualizarPrecio()">
+                        <select name="producto_id" id="producto-select" class="form-select">
                             <option value="">Selecciona un producto</option>
                             {% for producto in productos %}
                             <option value="{{ producto.id }}"
                                     data-precio="{{ producto.precio }}"
-                                    data-stock="{{ producto.cantidad }}">
-                                {{ producto.nombre }} {% if producto.marca %}- {{ producto.marca }}{% endif %}
-                                (Stock: {{ producto.cantidad }})
+                                    data-stock="{{ producto.cantidad }}"
+                                    data-custom-properties="{{ producto.codigo|default:'' }}">
+                                {{ producto.nombre }}{% if producto.marca %} - {{ producto.marca }}{% endif %} (Stock: {{ producto.cantidad }})
                             </option>
                             {% endfor %}
                         </select>
@@ -39,7 +43,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Cantidad</label>
-                        <input type="number" name="cantidad" class="form-control" value="1" min="1" id="cantidad-input" oninput="actualizarSubtotal()">
+                        <input type="number" name="cantidad" class="form-control" value="1" min="1"
+                               id="cantidad-input" oninput="actualizarSubtotal()">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Subtotal</label>
@@ -111,22 +116,39 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
-function actualizarPrecio() {
-    const select = document.getElementById('producto-select');
-    const option = select.options[select.selectedIndex];
-    const precio = option.dataset.precio || 0;
-    document.getElementById('precio-display').value = parseInt(precio).toLocaleString('es-CL');
-    actualizarSubtotal();
-}
+    const choices = new Choices('#producto-select', {
+        searchEnabled: true,
+        searchPlaceholderValue: 'Escribe nombre, marca o código...',
+        itemSelectText: '',
+        noResultsText: 'No se encontraron productos',
+        noChoicesText: 'No hay productos disponibles',
+        shouldSort: false,
+        searchFields: ['label', 'customProperties'],
+    });
 
-function actualizarSubtotal() {
-    const select = document.getElementById('producto-select');
-    const option = select.options[select.selectedIndex];
-    const precio = parseInt(option.dataset.precio) || 0;
-    const cantidad = parseInt(document.getElementById('cantidad-input').value) || 0;
-    document.getElementById('subtotal-display').value = (precio * cantidad).toLocaleString('es-CL');
-}
+    document.getElementById('producto-select').addEventListener('change', function() {
+        actualizarPrecio();
+    });
+
+    function actualizarPrecio() {
+        const select = document.getElementById('producto-select');
+        const option = select.options[select.selectedIndex];
+        const precio = option.dataset.precio || 0;
+        document.getElementById('precio-display').value = parseInt(precio).toLocaleString('es-CL');
+        actualizarSubtotal();
+    }
+
+    function actualizarSubtotal() {
+        const select = document.getElementById('producto-select');
+        const option = select.options[select.selectedIndex];
+        const precio = parseInt(option.dataset.precio) || 0;
+        const cantidad = parseInt(document.getElementById('cantidad-input').value) || 0;
+        document.getElementById('subtotal-display').value = (precio * cantidad).toLocaleString('es-CL');
+    }
 </script>
 {% endblock %}
