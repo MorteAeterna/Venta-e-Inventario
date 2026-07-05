@@ -31,12 +31,12 @@
 </div>
 
 <!-- Filtros -->
-<form method="GET" class="row g-2 mb-4">
+<form method="GET" id="form-filtro" class="row g-2 mb-4">
     <div class="col-md-6">
-        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Buscar por nombre...">
+        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Buscar por nombre, marca o código...">
     </div>
     <div class="col-md-4">
-        <select name="categoria" class="form-select">
+        <select name="categoria" id="categoria-select" class="form-select">
             <option value="">Todas las categorías</option>
             {% for cat in categorias %}
             <option value="{{ cat.id }}" {% if categoria_id == cat.id|stringformat:"s" %}selected{% endif %}>
@@ -99,15 +99,35 @@
     </table>
 </div>
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
-function abrirEscaner() {
-    const esCelular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (esCelular) {
-        window.location.href = "{% url 'escanear' %}";
-    } else {
-        const modal = new bootstrap.Modal(document.getElementById('modalQR'));
-        modal.show();
+    // Choices.js en el select de categorías
+    new Choices('#categoria-select', {
+        searchEnabled: true,
+        searchPlaceholderValue: 'Buscar categoría...',
+        itemSelectText: '',
+        noResultsText: 'No se encontraron categorías',
+        shouldSort: false,
+    });
+
+    // Auto submit al cambiar categoría
+    document.getElementById('categoria-select').addEventListener('change', function() {
+        document.getElementById('form-filtro').submit();
+    });
+
+    function abrirEscaner() {
+        const esCelular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (esCelular) {
+            window.location.href = "{% url 'escanear' %}";
+        } else {
+            const modal = new bootstrap.Modal(document.getElementById('modalQR'));
+            modal.show();
+        }
     }
-}
 </script>
 {% endblock %}
