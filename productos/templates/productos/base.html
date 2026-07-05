@@ -24,6 +24,9 @@
             <a href="{% url 'lista_categorias' %}" class="btn btn-outline-light btn-sm">
                 Categorías
             </a>
+            <a href="{% url 'historial_ventas' %}" class="btn btn-outline-light btn-sm">
+                Historial de Ventas
+            </a>
             <span class="text-white ms-3">{{ request.user.username }}</span>
             <a href="/admin/logout/" class="btn btn-outline-danger btn-sm">Cerrar sesión</a>
         </div>
